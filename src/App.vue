@@ -1,17 +1,11 @@
 <template>
-  <div id="app">
+  <div id="app" @click="searchShow = false">
     <header class="navbar navbar-static-top" id="page-head">
       <div class="container">
         <div class="navbar-header">
-          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
-            <span class="sr-only">Toggle navigation</span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </button>
-          <router-link class="navbar-brand" to="/"><img src="./assets/image/logo.png"></router-link>
+          <router-link class="navbar-brand" to="/index"><img src="./assets/image/logo.png"></router-link>
         </div>
-        <nav class="collapse navbar-collapse navbar-inverse" id="bs-example-navbar-collapse-1">
+        <nav class="navbar-inverse">
           <ul class="nav navbar-nav navbar-right">
             <li v-show="!userInfo"><a href="#" data-toggle="modal" data-target="#login-box"><span class="glyphicon glyphicon-user" aria-hidden="true" ></span> 登录</a></li>
             <li class="user" v-show="!!userInfo">
@@ -35,10 +29,17 @@
               </div>
             </li>
           </ul>
+          <div class="search">
+            <input type="text" name="" class="search-input" placeholder="搜索" v-model="searchVal" @click.stop="searchShow = true">
+            <ul class="search-list" v-show="searchShow">
+              <li v-for="article in searchList"><router-link :to="'/index/article/'+article._id" @click.native="inSearch(article.title)">{{article.title}}</router-link></li>
+              <li v-show="searchVal.length > 0 && searchList.length == 0">查找不到相关内容！</li>
+            </ul>
+          </div>
         </nav>
       </div>
     </header>
-    <router-view :user-info="userInfo"></router-view>
+    <router-view :user-info="userInfo" :all-articles="allArticles" @update:allArticles="val => allArticles = val"></router-view>
 
     <div class="modal fade" id="login-box" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
       <div class="modal-dialog modal-sm" role="document">
@@ -156,7 +157,12 @@ export default {
       userInfo: '',
       rePass: '',
       rePass2: '',
-      rePass3: ''
+      rePass3: '',
+      allArticles: '',
+      searchVal: '',
+      searchTime: '',
+      searchList: '',
+      searchShow: false
     }
   },
   mounted:function(){
@@ -164,6 +170,10 @@ export default {
     this.userSession()
   },
   methods:{
+    inSearch:function(val){
+      this.searchVal = val
+      this.searchShow = false
+    },
   	userIsExistence:function(){
       if(this.$verify.check('regname')){
         this.$http.post('/userIsExistence',{username:this.registerName}).then(function(response){
@@ -237,6 +247,20 @@ export default {
 		        }, 1000);
 	    	},function(response){})
     	}
+    },
+    getSearchList: function(){
+      var _this = this
+      var searchL = []
+      clearTimeout(_this.searchTime);
+      _this.searchTime = setTimeout(function(){
+        
+        for(var i=0; i<_this.allArticles.length; i++){
+          if(_this.allArticles[i].title.indexOf(_this.searchVal) != -1){
+            searchL.push(_this.allArticles[i])
+          }
+        }
+        _this.searchList = searchL
+      }, 1000);
     }
   },
   verify:{
@@ -264,6 +288,58 @@ export default {
     verifyError:function(){
       return this.$verify.$errors
     }
+  },
+  watch: {
+    searchVal: function(){
+      this.getSearchList()
+    }
   }
 }
 </script>
+<style type="text/css">
+.navbar-inverse{
+  position: relative;
+}
+.search {
+  position: absolute;
+  top: 10px;
+  left: 120px;
+  width: 200px;
+  overflow-x: hidden;
+}
+.search-input{
+    width: 100%;
+    height: 30px;
+    line-height: 30px;
+    padding-left: 12px;
+    background-color: rgba(255,255,255,.05);
+    border: none 0;
+    color: #fff;
+    font-size: 12px;
+    outline: none;
+    padding-right: 30px;
+    cursor: pointer;
+    border-radius: 2px;
+}
+.search-list{
+  background-color: rgba(245,245,245,.7);
+  width: 213px;
+  padding-left: 20px; 
+  max-height: 400px;
+  overflow-y: auto;
+  z-index: 9999;
+}
+.search-list li{
+  line-height: 36px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.search-list li a{
+  text-decoration: none;
+  color: #333;  
+}
+.search-list li a:hover{
+  color: #5FB878;
+}
+</style>

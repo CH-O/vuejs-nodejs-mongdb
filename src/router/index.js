@@ -5,6 +5,7 @@ import Admin from '@/pages/admin'
 import Edit from '@/components/edit'
 import New from '@/components/new'
 import User from '@/components/user'
+import Article from '@/components/article'
 
 Vue.use(Router)
 
@@ -12,12 +13,33 @@ export default new Router({
   mode: 'history',
   routes: [
     {
-      path: '/',
-      name: 'Home',
+      path: '',
+      redirect: { name: 'Article' }
+    },
+    {
+      path: '/index',
       meta: {
         requireAuth: false, 
       },
-      component: Home
+      component: Home,
+      children:[
+        {
+          path:'article/:id',
+          name:'ArticleId',
+          meta: {
+            requireAuth: false, 
+          },
+          component:Article
+        },
+        {
+          path:'',
+          name:'Article',
+          meta: {
+            requireAuth: false, 
+          },
+          component:Article
+        }
+      ]
     },
     {
       path: '/admin',
@@ -29,7 +51,7 @@ export default new Router({
 
       children:[
         {
-          path:'/admin/edit',
+          path:'edit',
           name: 'Edit',
           meta: {
             requireAuth: true, 
@@ -37,7 +59,7 @@ export default new Router({
           component:Edit
         },
         {
-          path:'/admin/new',
+          path:'new',
           name: 'New',
           meta: {
             requireAuth: true, 
@@ -45,7 +67,7 @@ export default new Router({
           component:New
         },
         {
-          path:'/admin/edit/:id',
+          path:'edit/:id',
           name:'EditItem',
           meta: {
             requireAuth: true, 
@@ -53,7 +75,7 @@ export default new Router({
           component:New
         },
         {
-          path:'/admin/user',
+          path:'user',
           name:'User',
           meta: {
             requireAuth: true, 
